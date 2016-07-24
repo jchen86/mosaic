@@ -4,8 +4,8 @@ var mosaicFactory = (function () {
   return {
     create: function (image, outputElement, tileWidth, tileHeight) {
       var origImgCanvas = createImageCanvas(image);
-      var tiledCanvas = createTiledCanvas(origImgCanvas, tileWidth, tileHeight);
-      outputElement.appendChild(tiledCanvas);
+      var mosaicCanvas = createMosaicCanvas(origImgCanvas, tileWidth, tileHeight);
+      outputElement.appendChild(mosaicCanvas);
     }
   };
 
@@ -18,28 +18,28 @@ var mosaicFactory = (function () {
     return canvas;
   }
 
-  function createTiledCanvas(originalCanvas, tileWidth, tileHeight) {
-    var numOfRows = Math.floor(originalCanvas.height / tileHeight);
-    var numOfCols = Math.floor(originalCanvas.width / tileWidth);
-    var tiledCanvas = document.createElement('canvas');
-    var tiledContext = tiledCanvas.getContext('2d');
-    tiledCanvas.width = numOfCols * tileWidth;
-    tiledCanvas.height = numOfRows * tileHeight;
+  function createMosaicCanvas(origCanvas, tileWidth, tileHeight) {
+    var mosaicCanvas = document.createElement('canvas');
+    var mosaicContext = mosaicCanvas.getContext('2d');
+    var numOfRows = Math.floor(origCanvas.height / tileHeight);
+    var numOfCols = Math.floor(origCanvas.width / tileWidth);
+    mosaicCanvas.width = numOfCols * tileWidth;
+    mosaicCanvas.height = numOfRows * tileHeight;
 
-    var imageData = originalCanvas.getContext('2d').getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+    var origImgData = origCanvas.getContext('2d').getImageData(0, 0, origCanvas.width, origCanvas.height);
 
     for (var rowIndex = 0; rowIndex < numOfRows; rowIndex++) {
       var rowTiles = [];
 
       for (var colIndex = 0; colIndex < numOfCols; colIndex++) {
-        var avgColorHex = colorCalculator.getTileAverageColorAsHex(imageData, rowIndex, colIndex, tileWidth, tileHeight);
+        var avgColorHex = colorCalculator.getTileAverageColorAsHex(origImgData, rowIndex, colIndex, tileWidth, tileHeight);
         rowTiles.push(getTileByHexColor(avgColorHex));
       }
 
-      drawRow(tiledContext, rowTiles, rowIndex, tileWidth, tileHeight);
+      drawRow(mosaicContext, rowTiles, rowIndex, tileWidth, tileHeight);
     }
 
-    return tiledCanvas;
+    return mosaicCanvas;
   }
 
   function getTileByHexColor(hexColor) {

@@ -14,6 +14,8 @@
         readFile(file)
           .then(loadImage)
           .then(createMosaic);
+      } else {
+        outputElement.innerHTML = `Incorrect file type: ${file.type}`;
       }
     }
 
