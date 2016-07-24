@@ -38,6 +38,7 @@
     }
 
     function createMosaic(img) {
+      outputElement.innerHTML = '';
       mosaicFactory.create(img, outputElement, TILE_WIDTH, TILE_HEIGHT);
     }
 
