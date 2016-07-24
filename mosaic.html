@@ -1,11 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="text/javascript" src="js/mosaic.js"></script>
-    <script type="text/javascript" src="js/client.js"></script>
     <title>Mosaic</title>
+    <style>
+      * {
+        font-family: sans-serif;
+      }
+
+      body {
+        background-color: #f6f6f6;
+      }
+    </style>
   </head>
   <body>
-    <!-- Edit me. -->
+    <h1>Photo mosaic</h1>
+    <input type="file" id="input">
+    <div id="output"></div>
+
+    <script type="text/javascript" src="js/mosaic.js"></script>
+    <script type="text/javascript" src="js/client.js"></script>
   </body>
 </html>
