@@ -58,35 +58,36 @@ var mosaicFactory = (function () {
         tileHeight: this.tileHeight
       };
 
-      var rowTilesResolved = tileProcessingQueue
+      var rowTilesFetched = tileProcessingQueue
         .postMessage(rowImageData)
         .then(fetchTiles);
 
-      allRowsTiles.push(rowTilesResolved);
+      allRowsTiles.push(rowTilesFetched);
     }
 
     return drawMosaicFromTop.call(this, allRowsTiles);
   }
 
   function fetchTiles(tileColors) {
-    var loadImagePromises = tileColors.map(getTileByHexColor);
-    return Promise.all(loadImagePromises);
+    var loadTilesPromises = tileColors.map(getTileByHexColor);
+    return Promise.all(loadTilesPromises);
   }
 
   function drawMosaicFromTop(allRowsTiles) {
     var mosaic = this;
-    var drawRowWhenReady = function (prevRowRendered, currRowTilesResolved, rowIndex) {
+    return allRowsTiles.reduce(drawRowWhenReady, Promise.resolve());
+
+    function drawRowWhenReady(prevRowRendered, currRowTilesResolved, rowIndex) {
       return prevRowRendered
         .then(function () {
           return currRowTilesResolved;
         })
         .then(drawRow.bind(mosaic, rowIndex))
-    };
-    return allRowsTiles.reduce(drawRowWhenReady, Promise.resolve());
+    }
   }
 
   function drawRow(rowIndex, tileImages) {
-    tileImages.forEach(function drawTile(tile, tileIndex) {
+    tileImages.forEach(function (tile, tileIndex) {
       this.context.drawImage(tile, tileIndex * this.tileWidth, rowIndex * this.tileHeight);
     }.bind(this));
     return Promise.resolve();
@@ -99,17 +100,7 @@ var mosaicFactory = (function () {
       return cached;
     }
 
-    var promise = new Promise(function (resolve, reject) {
-      var image = new Image();
-      image.onload = function () {
-        resolve(image);
-      };
-      image.onerror = function () {
-        reject('Error loading image: ' + image.src);
-      };
-      image.src = '/color/' + hexColor;
-    });
-
+    var promise = imageLoader.fromSrc('/color/' + hexColor);
     cachedTiles[hexColor] = promise;
     return promise;
   }

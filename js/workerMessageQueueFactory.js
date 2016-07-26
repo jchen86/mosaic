@@ -82,5 +82,7 @@ var workerMessageQueueFactory = (function () {
     });
     this.workers = [];
     this.availableWorkers = [];
+    this.queue = [];
+    this.processing = {};
   }
 })();

@@ -11,44 +11,16 @@
     function fileChangeListener() {
       var file = this.files[0];
       if (imageTypeRegex.test(file.type)) {
-        readFile(file)
-          .then(loadImage)
-          .then(createMosaic);
+        imageLoader.fromFile(file).then(createMosaic);
       } else {
         outputElement.innerHTML = `Incorrect file type: ${file.type}`;
       }
     }
 
-    function readFile(file) {
-      return new Promise(function (resolve) {
-        var fileReader = new FileReader();
-        fileReader.onload = function (event) {
-          resolve(event.target.result);
-        };
-        fileReader.readAsDataURL(file);
-      })
-    }
-
-    function loadImage(file) {
-      return new Promise(function (resolve) {
-        var img = new Image();
-        img.onload = function (event) {
-          resolve(event.target);
-        };
-        img.src = file;
-      })
-    }
-
-    function createMosaic(img) {
-      var startTime = performance.now();
+    function createMosaic(image) {
       outputElement.innerHTML = '';
-      mosaicFactory.create(img, outputElement, TILE_WIDTH, TILE_HEIGHT)
-        .then(function () {
-          var endTime = performance.now();
-          console.log(`Mosaic created. Took ${endTime - startTime} milliseconds.`)
-        });
+      mosaicFactory.create(image, outputElement, TILE_WIDTH, TILE_HEIGHT);
     }
-
   };
 
 })();
