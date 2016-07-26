@@ -15,8 +15,14 @@ module.exports = function (config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'js/**/*!(.spec).js',
-      'js/**/*.js'
+      'js/mosaic.js',
+      'js/colorCalculator.js',
+      'js/imageLoader.js',
+      'js/workerMessageQueueFactory.js',
+      'js/mosaicTileWorker.js',
+      'js/mosaicFactory.js',
+      'js/client.js',
+      'js/**/*.spec.js'
     ],
 
 
