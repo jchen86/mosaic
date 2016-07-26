@@ -42,7 +42,7 @@ var workerMessageQueueFactory = (function () {
 
     for (var i = 0; i < numOfWorkers; i++) {
       var worker = new Worker(jsFile);
-      worker.onmessage = workerMsgHandler.bind(this, worker);
+      worker.addEventListener('message', workerMsgHandler.bind(this, worker));
       workers.push(worker);
     }
     return workers;
