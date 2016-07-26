@@ -40,8 +40,13 @@
     }
 
     function createMosaic(img) {
+      var startTime = performance.now();
       outputElement.innerHTML = '';
-      mosaicFactory.create(img, outputElement, TILE_WIDTH, TILE_HEIGHT);
+      mosaicFactory.create(img, outputElement, TILE_WIDTH, TILE_HEIGHT)
+        .then(function () {
+          var endTime = performance.now();
+          console.log(`Mosaic created. Took ${endTime - startTime} milliseconds.`)
+        });
     }
 
   };

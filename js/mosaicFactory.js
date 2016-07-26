@@ -1,16 +1,40 @@
 var mosaicFactory = (function () {
   'use strict';
+
   var numOfWorkers = 3;
+  var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
   var cachedTiles = {};
+
+  var Mosaic = {
+    init: init,
+    render: render
+  };
 
   return {
     create: function (image, outputElement, tileWidth, tileHeight) {
-      window.startTime = performance.now();
-      var origImgCanvas = createImageCanvas(image);
-      var mosaicCanvas = createMosaicCanvas(origImgCanvas, tileWidth, tileHeight);
-      outputElement.appendChild(mosaicCanvas);
+      var mosaic = Object.create(Mosaic).init(image, tileWidth, tileHeight);
+      return mosaic.render(outputElement);
     }
   };
+
+  function init(image, tileHeight, tileWidth) {
+    this.origCanvas = createImageCanvas(image);
+    this.numOfRows = Math.floor(this.origCanvas.height / tileHeight);
+    this.numOfCols = Math.floor(this.origCanvas.width / tileWidth);
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = this.numOfCols * tileWidth;
+    this.canvas.height = this.numOfRows * tileHeight;
+    this.context = this.canvas.getContext('2d');
+    this.tileWidth = tileWidth;
+    this.tileHeight = tileHeight;
+    this.processingComplete = processImageData.call(this);
+    return this;
+  }
+
+  function render(outputElement) {
+    outputElement.appendChild(this.canvas);
+    return this.processingComplete;
+  }
 
   function createImageCanvas(image) {
     var canvas = document.createElement('canvas');
@@ -21,66 +45,57 @@ var mosaicFactory = (function () {
     return canvas;
   }
 
-  function createMosaicCanvas(origCanvas, tileWidth, tileHeight) {
-    var mosaicCanvas = document.createElement('canvas');
-    var mosaicContext = mosaicCanvas.getContext('2d');
-    var numOfRows = Math.floor(origCanvas.height / tileHeight);
-    var numOfCols = Math.floor(origCanvas.width / tileWidth);
-    mosaicCanvas.width = numOfCols * tileWidth;
-    mosaicCanvas.height = numOfRows * tileHeight;
+  function processImageData() {
+    var origImageData = this.origCanvas.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height);
+    var allRowsTiles = [];
 
-    var origImgData = origCanvas.getContext('2d').getImageData(0, 0, origCanvas.width, origCanvas.height);
-    var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
-    var tileProcessingSize = Math.floor(numOfCols / numOfWorkers);
-    var allRows = [];
+    for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
+      var rowImageData = {
+        imageData: origImageData,
+        rowIndex: rowIndex,
+        numOfCols: this.numOfCols,
+        tileWidth: this.tileWidth,
+        tileHeight: this.tileHeight
+      };
 
-    for (var rowIndex = 0; rowIndex < numOfRows; rowIndex++) {
-      var tilesProcessingPromises = [];
+      var rowTilesResolved = tileProcessingQueue
+        .postMessage(rowImageData)
+        .then(fetchTiles);
 
-      for (var index = 0; index < numOfWorkers; index++) {
-        var promise = tileProcessingQueue.postMessage({
-          imageData: origImgData,
-          rowIndex: rowIndex,
-          startColIndex: index * tileProcessingSize,
-          endColIndex: Math.min((index + 1) * tileProcessingSize, numOfCols),
-          tileWidth: tileWidth,
-          tileHeight: tileHeight
-        });
-        tilesProcessingPromises.push(promise);
-      }
-
-      // TODO chain promises
-      allRows.push(drawRow(mosaicContext, tilesProcessingPromises, rowIndex, tileWidth, tileHeight));
+      allRowsTiles.push(rowTilesResolved);
     }
 
-    //REMOVE
-    Promise.all(allRows).then(function () {
-      var endTime = performance.now();
-      console.log(`Drawing took ${endTime - startTime} ms.`)
-    });
-
-    return mosaicCanvas;
+    return drawMosaicFromTop.call(this, allRowsTiles);
   }
 
-  function drawRow(context, tilesProcessingPromises, rowIndex, tileWidth, tileHeight) {
-    return Promise.all(tilesProcessingPromises)
-      .then(function loadImage(response) {
-        var tileColors = flattenArray(response);
-        var loadImagePromises = tileColors.map(getTileByHexColor);
-        return Promise.all(loadImagePromises);
-      })
-      .then(function drawImage(tileImages) {
-        tileImages.forEach(function (tile, tileIndex) {
-          context.drawImage(tile, tileIndex * tileWidth, rowIndex * tileHeight);
-        });
-        return Promise.resolve();
-      });
+  function fetchTiles(tileColors) {
+    var loadImagePromises = tileColors.map(getTileByHexColor);
+    return Promise.all(loadImagePromises);
+  }
+
+  function drawMosaicFromTop(allRowsTiles) {
+    var mosaic = this;
+    var drawRowWhenReady = function (prevRowRendered, currRowTilesResolved, rowIndex) {
+      return prevRowRendered
+        .then(function () {
+          return currRowTilesResolved;
+        })
+        .then(drawRow.bind(mosaic, rowIndex))
+    };
+    return allRowsTiles.reduce(drawRowWhenReady, Promise.resolve());
+  }
+
+  function drawRow(rowIndex, tileImages) {
+    tileImages.forEach(function drawTile(tile, tileIndex) {
+      this.context.drawImage(tile, tileIndex * this.tileWidth, rowIndex * this.tileHeight);
+    }.bind(this));
+    return Promise.resolve();
   }
 
   function getTileByHexColor(hexColor) {
     var cached = cachedTiles[hexColor];
 
-    if(cached) {
+    if (cached) {
       return cached;
     }
 
@@ -94,14 +109,9 @@ var mosaicFactory = (function () {
       };
       image.src = '/color/' + hexColor;
     });
+
     cachedTiles[hexColor] = promise;
     return promise;
-  }
-
-  function flattenArray(array) {
-    return array.reduce(function (previous, current) {
-      return previous.concat(current);
-    })
   }
 
 })();
