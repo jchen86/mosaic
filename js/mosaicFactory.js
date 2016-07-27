@@ -2,7 +2,6 @@ var mosaicFactory = (function () {
   'use strict';
 
   var numOfWorkers = 3;
-  var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
   var cachedTiles = {};
 
   var Mosaic = {
@@ -41,7 +40,8 @@ var mosaicFactory = (function () {
   function processImageData() {
     var origImageData = this.origCanvas.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height);
     var allRowsTiles = [];
-
+    var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
+    
     for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
       var rowImageData = {
         imageData: origImageData,
