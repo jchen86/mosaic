@@ -21,7 +21,7 @@ var imageLoader = (function () {
   function loadImage(src) {
     return new Promise(function (resolve, reject) {
       var image = new Image();
-      image.onload = function (event) {
+      image.onload = function () {
         resolve(image);
       };
       image.onerror = function () {

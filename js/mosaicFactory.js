@@ -10,6 +10,7 @@ var mosaicFactory = (function () {
 
   return {
     create: function (image, tileWidth, tileHeight) {
+      checkArguments.apply(null, arguments);
       return Object.create(Mosaic).init(image, tileWidth, tileHeight);
     }
   };
@@ -41,7 +42,7 @@ var mosaicFactory = (function () {
     var origImageData = this.origCanvas.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height);
     var allRowsTiles = [];
     var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
-    
+
     for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
       var rowImageData = {
         imageData: origImageData,
@@ -96,6 +97,26 @@ var mosaicFactory = (function () {
     var promise = imageLoader.fromSrc('/color/' + hexColor);
     cachedTiles[hexColor] = promise;
     return promise;
+  }
+
+  function checkArguments(image, tileWidth, tileHeight) {
+    var errors = [];
+    if(!(image instanceof HTMLImageElement)) {
+      errors.push('image must be a HTMLImageElement')
+    }
+    if(!isNumberGreaterThanZero(tileWidth)) {
+      errors.push('tileWidth must be a number greater than 0')
+    }
+    if(!isNumberGreaterThanZero(tileHeight)) {
+      errors.push('tileWidth must be an integer')
+    }
+    if(errors.length) {
+      throw new TypeError(`Unable to create mosaic: ${errors.join(', ')}`)
+    }
+  }
+
+  function isNumberGreaterThanZero(num) {
+    return !!num && num > 0;
   }
 
 })();
