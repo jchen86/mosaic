@@ -19,7 +19,6 @@ module.exports = function (config) {
       'js/colorCalculator.js',
       'js/imageLoader.js',
       'js/workerMessageQueueFactory.js',
-      'js/mosaicTileWorker.js',
       'js/mosaicFactory.js',
       'js/client.js',
       'js/**/*.spec.js'

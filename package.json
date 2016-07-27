@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "start": "node server.js",
-    "test": "./node_modules/karma/bin/karma start"
+    "test": "node ./node_modules/karma/bin/karma start"
   },
   "devDependencies": {
     "jasmine-core": "^2.4.1",
