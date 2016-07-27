@@ -29,11 +29,6 @@ var mosaicFactory = (function () {
     return this;
   }
 
-  function render(outputElement) {
-    outputElement.appendChild(this.canvas);
-    return this.processingComplete;
-  }
-
   function createImageCanvas(image) {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
