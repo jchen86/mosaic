@@ -32,6 +32,13 @@ var workerMessageQueueFactory = (function () {
   };
 
   return {
+    /**
+     * Creates an instance of workerMessageQueue. 
+     *
+     * @param jsFile: script to be executed in the worker thread
+     * @param numOfWorkers: number of works to instantiate
+     * @returns {WorkerMessageQueue}
+     */
     init: function (jsFile, numOfWorkers) {
       return Object.create(WorkerMessageQueue).init(jsFile, numOfWorkers);
     }

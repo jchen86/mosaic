@@ -9,6 +9,14 @@ var mosaicFactory = (function () {
   };
 
   return {
+    /**
+     * Creates a photo mosaic from a given image. The image is divided into tiles, and each tile is replaced with an image
+     * retrieved from the server that matches the average color of the tile.
+     * @param image an <Image> element
+     * @param tileWidth width of each tile, must be a number greater than 0.
+     * @param tileHeight height of each tile, must be a number greater than 0.
+     * @returns an object containing the canvas element
+     */
     create: function (image, tileWidth, tileHeight) {
       checkArguments.apply(null, arguments);
       return Object.create(Mosaic).init(image, tileWidth, tileHeight);

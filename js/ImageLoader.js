@@ -2,9 +2,19 @@ var imageLoader = (function () {
   'use strict';
 
   return {
-    fromFile: function(file) {
+    /**
+     * Create an Image Element from a file and returns a promise that resolves when image is loaded.
+     * @param file
+     * @returns {Promise.<Image>}
+     */
+    fromFile: function (file) {
       return readFile(file).then(loadImage);
     },
+    /**
+     * Load an image at a specified URL and returns a promise that resolves when image is loaded.
+     * @param file
+     * @returns {Promise.<Image>}
+     */
     fromSrc: loadImage
   };
 
@@ -30,5 +40,5 @@ var imageLoader = (function () {
       image.src = src;
     })
   }
-  
+
 })();
