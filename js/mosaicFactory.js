@@ -6,14 +6,12 @@ var mosaicFactory = (function () {
   var cachedTiles = {};
 
   var Mosaic = {
-    init: init,
-    render: render
+    init: init
   };
 
   return {
-    create: function (image, outputElement, tileWidth, tileHeight) {
-      var mosaic = Object.create(Mosaic).init(image, tileWidth, tileHeight);
-      return mosaic.render(outputElement);
+    create: function (image, tileWidth, tileHeight) {
+      return Object.create(Mosaic).init(image, tileWidth, tileHeight);
     }
   };
 

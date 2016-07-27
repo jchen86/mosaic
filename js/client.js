@@ -18,8 +18,9 @@
     }
 
     function createMosaic(image) {
+      var mosaic = mosaicFactory.create(image, TILE_WIDTH, TILE_HEIGHT);
       outputElement.innerHTML = '';
-      mosaicFactory.create(image, outputElement, TILE_WIDTH, TILE_HEIGHT);
+      outputElement.appendChild(mosaic.canvas);
     }
   };
 
