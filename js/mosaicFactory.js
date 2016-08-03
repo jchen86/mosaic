@@ -3,7 +3,6 @@ var mosaicFactory = (function () {
 
   var numOfWorkers = 4;
   var tileProcessingQueue;
-  var cachedTiles = {};
 
   var Mosaic = {
     init: init
@@ -34,6 +33,7 @@ var mosaicFactory = (function () {
     this.context = this.canvas.getContext('2d');
     this.tileWidth = tileWidth;
     this.tileHeight = tileHeight;
+    this.cachedTiles = {};
     this.processingComplete = processImageData.call(this);
     return this;
   }
@@ -53,7 +53,7 @@ var mosaicFactory = (function () {
 
     for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
       var rowTilesFetched = calculateTileColors.call(this, rowIndex)
-        .then(fetchTiles);
+        .then(fetchTiles.bind(this));
 
       allRowsTiles.push(rowTilesFetched);
     }
@@ -88,7 +88,7 @@ var mosaicFactory = (function () {
   }
 
   function fetchTiles(tileColors) {
-    var loadTilesPromises = tileColors.map(getTileByHexColor);
+    var loadTilesPromises = tileColors.map(getTileByHexColor.bind(this));
     return Promise.all(loadTilesPromises);
   }
 
@@ -113,14 +113,14 @@ var mosaicFactory = (function () {
   }
 
   function getTileByHexColor(hexColor) {
-    var cached = cachedTiles[hexColor];
+    var cached = this.cachedTiles[hexColor];
 
     if (cached) {
       return cached;
     }
 
     var promise = imageLoader.fromSrc('/color/' + hexColor);
-    cachedTiles[hexColor] = promise;
+    this.cachedTiles[hexColor] = promise;
     return promise;
   }
 
