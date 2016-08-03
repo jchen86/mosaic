@@ -14,10 +14,12 @@
 
       var file = this.files[0];
       if (imageTypeRegex.test(file.type)) {
+        var start = performance.now();
         imageLoader.fromFile(file)
           .then(createMosaic)
           .then(function () {
-            messageElement.innerHTML = 'Photo mosaic successfully created.';
+            var end = performance.now();
+            messageElement.innerHTML = `Photo mosaic successfully created in ${end - start}ms.`;
           });
       } else {
         messageElement.innerHTML = `Incorrect file type: ${file.type}`;

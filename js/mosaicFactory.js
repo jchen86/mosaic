@@ -1,7 +1,8 @@
 var mosaicFactory = (function () {
   'use strict';
 
-  var numOfWorkers = 3;
+  var numOfWorkers = 4;
+  var tileProcessingQueue;
   var cachedTiles = {};
 
   var Mosaic = {
@@ -47,27 +48,43 @@ var mosaicFactory = (function () {
   }
 
   function processImageData() {
-    var origImageData = this.origCanvas.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height);
+    this.origImageData = this.origCanvas.getContext('2d').getImageData(0, 0, this.canvas.width, this.canvas.height);
     var allRowsTiles = [];
-    var tileProcessingQueue = workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
 
     for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
-      var rowImageData = {
-        imageData: origImageData,
-        rowIndex: rowIndex,
-        numOfCols: this.numOfCols,
-        tileWidth: this.tileWidth,
-        tileHeight: this.tileHeight
-      };
-
-      var rowTilesFetched = tileProcessingQueue
-        .postMessage(rowImageData)
+      var rowTilesFetched = calculateTileColors.call(this, rowIndex)
         .then(fetchTiles);
 
       allRowsTiles.push(rowTilesFetched);
     }
 
     return drawMosaicFromTop.call(this, allRowsTiles);
+  }
+
+  function calculateTileColors (rowIndex) {
+    if(numOfWorkers > 0) {
+      return calculateTileColorsWithWorkers.call(this, rowIndex);
+    }
+
+    var tileColors = [];
+
+    for (var colIndex = 0; colIndex < this.numOfCols; colIndex++) {
+      var avgColorHex = colorCalculator.getTileAverageColorAsHex(this.origImageData, rowIndex, colIndex, this.tileWidth, this.tileHeight);
+      tileColors.push(avgColorHex);
+    }
+    return Promise.resolve(tileColors);
+  }
+
+  function calculateTileColorsWithWorkers(rowIndex) {
+    var rowImageData = {
+      rowIndex: rowIndex,
+      imageData: this.origImageData,
+      numOfCols: this.numOfCols,
+      tileWidth: this.tileWidth,
+      tileHeight: this.tileHeight
+    };
+    tileProcessingQueue = tileProcessingQueue || workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
+    return tileProcessingQueue.postMessage(rowImageData);
   }
 
   function fetchTiles(tileColors) {
