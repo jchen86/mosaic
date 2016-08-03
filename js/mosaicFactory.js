@@ -1,7 +1,7 @@
 var mosaicFactory = (function () {
   'use strict';
 
-  var numOfWorkers = 4;
+  var numOfWorkers = 2;
   var tileProcessingQueue;
 
   var Mosaic = {
