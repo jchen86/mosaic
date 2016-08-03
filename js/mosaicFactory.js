@@ -5,7 +5,8 @@ var mosaicFactory = (function () {
   var tileProcessingQueue;
 
   var Mosaic = {
-    init: init
+    init: init,
+    drawMosaicFromTop: drawMosaicFromTop
   };
 
   return {
@@ -20,7 +21,9 @@ var mosaicFactory = (function () {
     create: function (image, tileWidth, tileHeight) {
       checkArguments.apply(null, arguments);
       return Object.create(Mosaic).init(image, tileWidth, tileHeight);
-    }
+    },
+
+    Mosaic: Mosaic
   };
 
   function init(image, tileHeight, tileWidth) {
@@ -52,10 +55,24 @@ var mosaicFactory = (function () {
     var allRowsTiles = [];
 
     for (var rowIndex = 0; rowIndex < this.numOfRows; rowIndex++) {
-      var rowTilesFetched = calculateTileColors.call(this, rowIndex)
-        .then(fetchTiles.bind(this));
+      var tilesForTheRow = [];
 
-      allRowsTiles.push(rowTilesFetched);
+      for (var colIndex = 0; colIndex < this.numOfCols; colIndex++) {
+        tileProcessingQueue = tileProcessingQueue || workerMessageQueueFactory.init('js/mosaicTileWorker.js', numOfWorkers);
+        // var startIndex = this.canvas.width * rowIndex *
+        // var image = this.origImageData.slice(rowIndex);
+        var tileAverageColor = tileProcessingQueue.postMessage({
+          imageData: this.origImageData,
+          rowIndex: rowIndex,
+          colIndex: colIndex,
+          tileWidth: this.tileWidth,
+          tileHeight: this.tileHeight
+        }).then(getTileByHexColor.bind(this));
+        tilesForTheRow.push(tileAverageColor);
+
+      }
+
+      allRowsTiles.push(Promise.all(tilesForTheRow));
     }
 
     return drawMosaicFromTop.call(this, allRowsTiles);
@@ -87,8 +104,8 @@ var mosaicFactory = (function () {
     return tileProcessingQueue.postMessage(rowImageData);
   }
 
-  function fetchTiles(tileColors) {
-    var loadTilesPromises = tileColors.map(getTileByHexColor.bind(this));
+  function fetchTiles(tileColor) {
+    var loadTilesPromises = tileColor.map(getTileByHexColor.bind(this));
     return Promise.all(loadTilesPromises);
   }
 

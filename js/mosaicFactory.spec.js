@@ -29,6 +29,39 @@ describe('mosaicFactory', function () {
     spyOn(imageLoader, 'fromSrc').and.returnValue(Promise.resolve(['anImage']));
   });
 
+  describe('verify mosaic is rendered from the top', function () {
+    var allRowTiles, allRowTilesResolveFn, mockInstance, promise;
+
+    beforeEach(function () {
+      allRowTiles = [];
+      allRowTilesResolveFn = [];
+
+      for(var i =0; i <2; i++) {
+        allRowTiles.push(new Promise(function(resolve) {
+          allRowTilesResolveFn.push(resolve);
+        }));
+      }
+      mockInstance = {context: jasmine.createSpyObj('context', ['drawImage'])};
+      promise = mosaicFactory.Mosaic.drawMosaicFromTop.call(mockInstance, allRowTiles);
+    });
+
+    it('should not draw the 2nd row when first row is not resolved', function () {
+      allRowTilesResolveFn[1].call();
+      expect(CanvasRenderingContext2D.prototype.drawImage).not.toHaveBeenCalled();
+    });
+
+    fit('should draw 1st and 2nd row when tiles for both rows are resolved', function (done) {
+      allRowTilesResolveFn[0](['firstImage']);
+      allRowTilesResolveFn[1](['2ndRowImage']);
+      promise.then(function () {
+        expect(mockInstance.context.drawImage).toHaveBeenCalledTimes(2);
+        done();
+      });
+    });
+
+
+  });
+
   describe('when valid data is provided', function () {
     beforeEach(function (done) {
       mosaic = mosaicFactory.create(image, opts.tileWidth, opts.tileHeight);
